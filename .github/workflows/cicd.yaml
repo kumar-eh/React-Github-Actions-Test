@@ -83,3 +83,29 @@ jobs:
           registry: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+
+      - name: Push container image to ACR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}
+          file: Dockerfile
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          containerAppEnvironment: ${{ env.CONTAINER_APP_NAME }}-env
+          registryUrl: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
+          registryUsername: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+          ingress: external
+          targetPort: 80
