@@ -51,4 +51,9 @@ jobs:
           path: dist/
 
       - name: Test
-        run: npm test
+        run: npm test -- --watchAll=false
+
+      - name: Validate Build
+        run: |
+          test -f dist/index.html
+          echo "Build artifacts are present"
